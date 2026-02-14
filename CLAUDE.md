@@ -1,4 +1,4 @@
-# @veria/plex-engine
+# plex-engine
 
 ## What This Is
 A standalone React component library that implements TheBrain-style "plex" visualization — the interactive mindmap where clicking a node makes it the active center, its parent moves above, its children fan out below, and smooth animated edges connect everything.
@@ -6,7 +6,7 @@ A standalone React component library that implements TheBrain-style "plex" visua
 This is a **reusable package** consumed by:
 - **Proactiva** (Next.js marketing site at ~/Projects/Proactiva) — drop-in replacement for `components/shared/wander-mindmap.tsx`
 - **CommandCentral V.0** (~/Projects/commandcentralV.0) — replaces the ReactFlow-based `MindmapRenderer.tsx` in VISLZR
-- Any future Veria ecosystem app
+- Any React app that needs a plex/mindmap visualization
 
 ## Architecture (Learned from TheBrain reverse-engineering)
 
@@ -92,7 +92,7 @@ The plex layout is **deterministic** with these zones:
 ## Public API
 
 ```tsx
-import { PlexCanvas } from '@veria/plex-engine';
+import { PlexCanvas } from 'plex-engine';
 
 // Minimal usage
 <PlexCanvas

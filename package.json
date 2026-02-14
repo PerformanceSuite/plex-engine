@@ -1,5 +1,5 @@
 {
-  "name": "@veria/plex-engine",
+  "name": "plex-engine",
   "version": "0.1.0",
   "description": "TheBrain-style plex visualization engine — Canvas2D edges, DOM nodes, deterministic layout",
   "main": "dist/index.js",
