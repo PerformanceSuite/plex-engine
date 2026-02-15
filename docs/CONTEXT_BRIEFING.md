@@ -45,3 +45,22 @@ After the engine is built and the demo works, it replaces:
 - Used by `~/Projects/Proactiva/components/marketing/portal-mindmap-wander.tsx` (contains node data + demo script)
 
 The Proactiva node data has extra fields (glowClass, benefits, href, demoProp) that the engine doesn't need to know about — those go in `PlexNode.data` and Proactiva's wrapper handles rendering the detail panel.
+
+## Browser Testing Limitations
+
+Claude Code does NOT have access to the Chrome browser extension ("Claude in Chrome"). That extension only works in the claude.ai web chat interface — it's a completely separate system from Claude Code's MCP servers.
+
+Claude Code's MCP config is at `~/.config/claude-code/mcp-settings.json`. It has filesystem, github, desktop-commander, brave-search, and other MCP servers, but NO browser/Chrome MCP. The `playwright` and `chrome-devtools` MCP servers are present but DISABLED.
+
+This means Claude Code CANNOT:
+- Open a browser and take screenshots
+- Inspect live pages
+- Verify visual output in a browser
+
+To test visually, Claude Code should:
+1. Build the demo app and start the dev server (`npm run dev`)
+2. Tell the user to check it in their browser at the URL
+3. Ask for feedback or a screenshot
+4. Alternatively, use the desktop-commander MCP to open the URL in the default browser
+
+Do NOT waste time trying to connect to Chrome or take screenshots. It won't work.
