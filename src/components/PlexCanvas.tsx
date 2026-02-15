@@ -1,11 +1,28 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import type { PlexCanvasProps, NodePosition } from '../types';
+import type { PlexCanvasProps, PlexNode, NodePosition } from '../types';
 import { resolveTheme } from '../themes';
 import { computeLayout } from '../layout/plex-layout';
 import { drawEdges } from '../canvas/edge-renderer';
+import { animateEdges } from '../canvas/animation';
 import { useCanvasSize } from '../hooks/use-canvas-size';
 import { useNodeMeasures } from '../hooks/use-node-measures';
 import { PlexNodePill } from './PlexNodePill';
+import { PlexBreadcrumb } from './PlexBreadcrumb';
+
+function buildTrail(nodes: PlexNode[], activeId: string): PlexNode[] {
+  const trail: PlexNode[] = [];
+  let currentId: string | undefined = activeId;
+
+  while (currentId) {
+    const node = nodes.find((n) => n.id === currentId);
+    if (!node) break;
+    trail.unshift(node);
+    const parent = nodes.find((n) => n.children?.includes(currentId!));
+    currentId = parent?.id;
+  }
+
+  return trail;
+}
 
 export const PlexCanvas: React.FC<PlexCanvasProps> = ({
   nodes,
@@ -21,6 +38,8 @@ export const PlexCanvas: React.FC<PlexCanvasProps> = ({
   const theme = resolveTheme(themeProp);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cancelAnimRef = useRef<(() => void) | null>(null);
+  const prevActiveRef = useRef<string>(activeId);
   const { width, height } = useCanvasSize(containerRef);
   const { rects, remeasure } = useNodeMeasures(containerRef);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -33,6 +52,9 @@ export const PlexCanvas: React.FC<PlexCanvasProps> = ({
     containerHeight: height,
   });
 
+  // Build breadcrumb trail
+  const trail = buildTrail(nodes, activeId);
+
   // Build a map of id -> position for quick lookup
   const positionMap = new Map<string, NodePosition>();
   for (const pos of layout.positions) {
@@ -43,7 +65,6 @@ export const PlexCanvas: React.FC<PlexCanvasProps> = ({
   const nodeIds = layout.positions.map((p) => p.id);
   useEffect(() => {
     if (width === 0 || height === 0) return;
-    // Small delay to let CSS transitions start, then measure
     const timer = setTimeout(() => {
       remeasure(nodeIds);
     }, 50);
@@ -61,7 +82,7 @@ export const PlexCanvas: React.FC<PlexCanvasProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId, width, height]);
 
-  // Draw edges on canvas
+  // Draw edges on canvas — animate on navigation, static on resize
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || rects.size === 0) return;
@@ -75,15 +96,39 @@ export const PlexCanvas: React.FC<PlexCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    drawEdges({
-      ctx,
-      edges: layout.edges,
-      nodeRects: rects,
-      theme,
-      edgeStyle,
-      dpr,
-    });
-  }, [rects, layout.edges, theme, edgeStyle, width, height]);
+    // Cancel any running animation
+    cancelAnimRef.current?.();
+
+    const didNavigate = prevActiveRef.current !== activeId;
+    prevActiveRef.current = activeId;
+
+    if (didNavigate) {
+      // Animate edge reveal on navigation
+      cancelAnimRef.current = animateEdges({
+        ctx,
+        edges: layout.edges,
+        nodeRects: rects,
+        theme,
+        edgeStyle,
+        dpr,
+        duration: theme.transitionDuration,
+      });
+    } else {
+      // Static draw (resize, initial render)
+      drawEdges({
+        ctx,
+        edges: layout.edges,
+        nodeRects: rects,
+        theme,
+        edgeStyle,
+        dpr,
+      });
+    }
+
+    return () => {
+      cancelAnimRef.current?.();
+    };
+  }, [rects, layout.edges, theme, edgeStyle, width, height, activeId]);
 
   const handleHover = useCallback(
     (id: string | null) => {
@@ -92,6 +137,9 @@ export const PlexCanvas: React.FC<PlexCanvasProps> = ({
     },
     [onNodeHover]
   );
+
+  // Responsive: detect small container
+  const isCompact = width > 0 && width < 480;
 
   if (width === 0 || height === 0) {
     return (
@@ -120,9 +168,13 @@ export const PlexCanvas: React.FC<PlexCanvasProps> = ({
         position: 'relative',
         overflow: 'hidden',
         background: theme.background,
+        fontSize: isCompact ? '0.85em' : undefined,
         ...style,
       }}
     >
+      {/* Breadcrumb navigation */}
+      <PlexBreadcrumb trail={trail} onNavigate={onNavigate} theme={theme} />
+
       {/* Canvas edge layer */}
       <canvas
         ref={canvasRef}

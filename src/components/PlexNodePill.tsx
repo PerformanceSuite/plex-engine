@@ -27,11 +27,18 @@ export const PlexNodePill: React.FC<PlexNodePillProps> = ({
   const isActive = role === 'active';
   const fontSize = isActive ? '1rem' : '0.85rem';
 
+  const hoverScale = isHovered && !isActive ? 'translate(-50%, -50%) scale(1.05)' : 'translate(-50%, -50%)';
+  const glowShadow = isActive
+    ? `0 0 20px ${theme.nodeActiveBorder}, 0 0 40px ${theme.nodeActiveBorder.replace(/[\d.]+\)$/, '0.15)')}`
+    : isHovered
+      ? `0 0 12px ${theme.nodePassiveBorder}`
+      : 'none';
+
   const style: React.CSSProperties = {
     position: 'absolute',
     left: x,
     top: y,
-    transform: 'translate(-50%, -50%)',
+    transform: hoverScale,
     padding: isActive ? '10px 22px' : '7px 16px',
     borderRadius: '9999px',
     background: isActive ? theme.nodeActiveBg : theme.nodePassiveBg,
@@ -44,9 +51,9 @@ export const PlexNodePill: React.FC<PlexNodePillProps> = ({
     whiteSpace: 'nowrap',
     userSelect: 'none',
     transition: `all ${theme.transitionDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-    opacity: isHovered && !isActive ? 0.9 : 1,
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
+    boxShadow: glowShadow,
     zIndex: isActive ? 10 : 5,
   };
 
