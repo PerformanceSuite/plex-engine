@@ -17,6 +17,7 @@
   "scripts": {
     "dev": "vite demo",
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "prepare": "tsup src/index.ts --format esm,cjs --dts --clean",
     "demo": "vite demo --open",
     "lint": "tsc --noEmit"
   },
