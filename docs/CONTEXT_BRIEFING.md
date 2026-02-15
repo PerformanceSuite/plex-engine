@@ -59,8 +59,4 @@ This means Claude Code CANNOT:
 
 To test visually, Claude Code should:
 1. Build the demo app and start the dev server (`npm run dev`)
-2. Tell the user to check it in their browser at the URL
-3. Ask for feedback or a screenshot
-4. Alternatively, use the desktop-commander MCP to open the URL in the default browser
-
-Do NOT waste time trying to connect to Chrome or take screenshots. It won't work.
+2. visually inspect and iterate yourself.
